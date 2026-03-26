@@ -65,4 +65,75 @@ GROUP BY Country;
 -- 15. Obtén las canciones que su título empieza por ‘You’
 SELECT Name
 FROM tracks
-WHERE Name LIKE "You%"
+WHERE Name LIKE "You%";
+
+-- SEGUNDA PARTE
+
+-- 1. Facturas de Clientes de Brasil, Nombre del cliente, Id de factura, fecha de la factura y el país de la factura
+SELECT customers.FirstName, customers.LastName, invoices.InvoiceId, invoices.InvoiceDate, invoices.BillingCountry
+FROM customers
+JOIN invoices ON customers.CustomerId = invoices.CustomerId
+WHERE customers.Country = 'Brazil';
+
+-- 2. Obtén cada factura asociada a cada agente de ventas con su nombre completo
+SELECT employees.FirstName || ' ' || employees.LastName AS SalesAgent, invoices.*
+FROM employees
+JOIN customers ON employees.EmployeeId = customers.SupportRepId
+JOIN invoices ON customers.CustomerId = invoices.CustomerId;
+
+-- 3. Obtén el nombre del cliente, el país, el nombre del agente y el total
+SELECT customers.FirstName || ' ' || customers.LastName AS CustomerName, 
+       customers.Country, 
+       employees.FirstName || ' ' || employees.LastName AS SalesAgent, 
+       invoices.Total
+FROM customers
+JOIN employees ON customers.SupportRepId = employees.EmployeeId
+JOIN invoices ON customers.CustomerId = invoices.CustomerId;
+
+-- 4. Obtén cada artículo de la factura con el nombre de la canción
+SELECT invoice_items.*, tracks.Name AS TrackName
+FROM invoice_items
+JOIN tracks ON invoice_items.TrackId = tracks.TrackId;
+
+-- 5. Muestra todas las canciones con su nombre, formato, álbum y género
+SELECT tracks.Name AS Song, 
+       media_types.Name AS Format, 
+       albums.Title AS Album, 
+       genres.Name AS Genre
+FROM tracks
+JOIN media_types ON tracks.MediaTypeId = media_types.MediaTypeId
+JOIN albums ON tracks.AlbumId = albums.AlbumId
+JOIN genres ON tracks.GenreId = genres.GenreId;
+
+-- 6. Cuántas canciones hay en cada playlist
+SELECT playlists.Name AS PlaylistName, COUNT(playlist_track.TrackId) AS TotalTracks
+FROM playlists
+LEFT JOIN playlist_track ON playlists.PlaylistId = playlist_track.PlaylistId
+GROUP BY playlists.PlaylistId;
+
+-- 7. Cuánto ha vendido cada empleado
+SELECT employees.FirstName || ' ' || employees.LastName AS EmployeeName, SUM(invoices.Total) AS TotalSales
+FROM employees
+JOIN customers ON employees.EmployeeId = customers.SupportRepId
+JOIN invoices ON customers.CustomerId = invoices.CustomerId
+GROUP BY employees.EmployeeId;
+
+-- 8. ¿Quién ha sido el agente de ventas que más ha vendido en 2009?
+SELECT employees.FirstName || ' ' || employees.LastName AS SalesAgent, SUM(invoices.Total) AS TotalSales
+FROM employees
+JOIN customers ON employees.EmployeeId = customers.SupportRepId
+JOIN invoices ON customers.CustomerId = invoices.CustomerId
+WHERE invoices.InvoiceDate BETWEEN '2009-01-01' AND '2009-12-31'
+GROUP BY employees.EmployeeId
+ORDER BY TotalSales DESC
+LIMIT 1;
+
+-- 9. ¿Cuáles son los 3 grupos que más han vendido?
+SELECT artists.Name AS ArtistName, SUM(invoice_items.UnitPrice * invoice_items.Quantity) AS TotalSales
+FROM artists
+JOIN albums ON artists.ArtistId = albums.ArtistId
+JOIN tracks ON albums.AlbumId = tracks.AlbumId
+JOIN invoice_items ON tracks.TrackId = invoice_items.TrackId
+GROUP BY artists.ArtistId
+ORDER BY TotalSales DESC
+LIMIT 3;
