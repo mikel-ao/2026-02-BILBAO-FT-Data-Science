@@ -12,7 +12,7 @@ SELECT FirstName, LastName, Address, City, State, Country, Email
 FROM customers WHERE NOT customers.country = "USA";
 
 -- 5. Obtén los empleados que son agentes de ventas: Nombre completo, Dirección (Ciudad, Estado, País) y email
-SELECT FirstName, LastName, Address, City, State, Country, Email
+SELECT FirstName || " " || LastName AS NombreCompleto, Address, City, State, Country, Email
 FROM employees
 WHERE Title = "Sales Support Agent";
 
@@ -26,14 +26,17 @@ WHERE Country = "USA"
 GROUP BY State;
 
 -- 8. Cuántos artículos tiene la factura 37
-SELECT count(Quantity)
+SELECT SUM(Quantity)
 FROM invoice_items
 WHERE InvoiceId = 37;
 
 -- 9. Cuántas canciones tiene ‘AC/DC’
- SELECT count(TrackId)
+ SELECT artists.name, count(tracks.trackId)
  FROM tracks
- WHERE Composer = "AC/DC";
+ INNER JOIN albums ON tracks.albumid = albums.albumid
+ INNER JOIN artists ON albums.artistid = artists.artistid
+ WHERE artists.name = "AC/DC";
+
  
  -- 10. Cuántos artículos tiene cada factura
 SELECT InvoiceId, SUM(Quantity)
@@ -48,13 +51,21 @@ GROUP BY BillingCountry;
 -- 12. Cuántas facturas ha habido en 2009 y 2011
 SELECT strftime('%Y', InvoiceDate) AS Anio, count(InvoiceId) AS TotalFacturas
 FROM invoices
-WHERE strftime('%Y', InvoiceDate) IN ('2009', '2011')
+WHERE Anio IN ('2009', '2011')
 GROUP BY Anio;
 
--- 13. Cuántas facturas ha habido en 2009 y 2011 
+-- 12. Otra forma
+SELECT strftime('%Y', InvoiceDate) AS Anio, count(InvoiceId) AS TotalFacturas
+FROM invoices
+WHERE Anio = "2009" or Anio = "2011"
+--WHERE Anio IN ('2009', '2011')
+GROUP BY Anio;
+
+-- 13. Cuántas facturas ha habido entre 2009 y 2011 
 SELECT count(InvoiceId), InvoiceDate
 FROM invoices
 WHERE InvoiceDate BETWEEN '2009-01-01' AND '2011-12-31';
+
 
 -- 14. Cuántas clientes hay de España y de Brasil
 SELECT count(CustomerId), Country
@@ -88,7 +99,9 @@ SELECT customers.FirstName || ' ' || customers.LastName AS CustomerName,
        invoices.Total
 FROM customers
 JOIN employees ON customers.SupportRepId = employees.EmployeeId
-JOIN invoices ON customers.CustomerId = invoices.CustomerId;
+JOIN invoices ON customers.CustomerId = invoices.CustomerId
+GROUP BY 1;
+
 
 -- 4. Obtén cada artículo de la factura con el nombre de la canción
 SELECT invoice_items.*, tracks.Name AS TrackName
